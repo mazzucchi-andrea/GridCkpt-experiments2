@@ -236,8 +236,7 @@ int main(int argc, char** argv) {
     const char* cmd = NULL;
     int runs = 1000;
     const char* events_csv =
-        //"resource_stalls.sb:u,
-        "ld_blocks.store_forward:u,ld_blocks_partial."
+        "resource_stalls.sb:u,ld_blocks.store_forward:u,ld_blocks_partial."
         "address_alias:u,ld_blocks.no_sr:u";
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--cmd") == 0 && i + 1 < argc) {

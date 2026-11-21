@@ -159,14 +159,14 @@ case "${1:-}" in
     "")
         check_bc
         run_experiments
-        #generate_figures
+        figures
         ;;
     experiments)
         check_bc
         run_experiments
         ;;
     figures)
-        generate_figures
+        gnuplot plot.gp
         ;;
     clean)
         clean_all

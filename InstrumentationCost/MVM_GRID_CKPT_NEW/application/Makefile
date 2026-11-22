@@ -8,6 +8,8 @@ WRITES=950
 READS=50
 MOD=64
 CF=0
+ALIGNED=1
+TEST_SIZE=1
 
 all:
-	gcc -c prog.c -mavx -mavx2 -mavx512f -funroll-loops -pie -fPIE -I ../include -DALLOCATOR_AREA_SIZE=$(ALLOCATOR_AREA_SIZE) -DWRITES=$(WRITES) -DREADS=$(READS) -DMOD=$(MOD) -DCF=$(CF)
+	gcc -c prog.c -mavx -mavx2 -mavx512f -funroll-loops -pie -fPIE -I ../include -DALLOCATOR_AREA_SIZE=$(ALLOCATOR_AREA_SIZE) -DWRITES=$(WRITES) -DREADS=$(READS) -DMOD=$(MOD) -DCF=$(CF) -DALIGNED=$(ALIGNED) -DTEST_SIZE=$(TEST_SIZE)

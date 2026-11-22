@@ -14,14 +14,38 @@ declare -a mods=(32 256)
 declare -a chunks=(32 256)
 declare -a writes=(0.95 0.90 0.85 0.80 0.75 0.70 0.65 0.60 0.55 0.50 0.45 0.40 0.35 0.30)
 
+ALIGNED=1     # default: aligned
+TEST_SIZE=1   # default: 1 (allowed: 1 or 8)
+COMMAND=""
+
+parse_args() {
+    for arg in "$@"; do
+        case "$arg" in
+            experiments|figures|clean) COMMAND="$arg" ;;
+            aligned)   ALIGNED=1 ;;
+            unaligned) ALIGNED=0 ;;
+            1|8)       TEST_SIZE="$arg" ;;
+            -h|--help) usage ;;
+            *)
+                echo "Unknown argument: $arg"
+                usage
+                ;;
+        esac
+    done
+}
+
 usage() {
-    echo "Usage: $0 [command]"
+    echo "Usage: $0 [command] [aligned|unaligned] [1|8]"
     echo ""
     echo "Commands:"
     echo "  (none)      Run experiments, then generate figures"
     echo "  experiments Only run the experiments and generate CSV data"
     echo "  figures     Only (re)generate figures from existing CSV data"
     echo "  clean       Delete all CSV results in subdirectories and the plots directory"
+    echo ""
+    echo "Options (any order):"
+    echo "  aligned|unaligned  How the experiments are compiled (default: aligned)"
+    echo "  1|8                TEST_SIZE value (default: 1)"
     exit 1
 }
 
@@ -70,7 +94,7 @@ run_experiments() {
                         w_ops=$(echo "$o * $w" | bc)
                         w_ops=${w_ops%.*}
                         r_ops=$(echo "$o - $w_ops" | bc)
-                        make ALLOCATOR_AREA_SIZE=$s WRITES=$w_ops READS=$r_ops CF=$cf MOD=$mod
+                        make ALLOCATOR_AREA_SIZE=$s WRITES=$w_ops READS=$r_ops CF=$cf MOD=$mod ALIGNED=$ALIGNED TEST_SIZE=$TEST_SIZE
                         ./application/prog
                     done
                 done
@@ -100,7 +124,7 @@ run_experiments() {
                         w_ops=$(echo "$o * $w" | bc)
                         w_ops=${w_ops%.*}
                         r_ops=$(echo "$o - $w_ops" | bc)
-                        make ALLOCATOR_AREA_SIZE=$s WRITES=$w_ops READS=$r_ops CF=$cf MOD=$mod
+                        make ALLOCATOR_AREA_SIZE=$s WRITES=$w_ops READS=$r_ops CF=$cf MOD=$mod ALIGNED=$ALIGNED TEST_SIZE=$TEST_SIZE
                         ./application/prog
                     done
                 done
@@ -131,7 +155,7 @@ run_experiments() {
                         w_ops=$(echo "$o * $w" | bc)
                         w_ops=${w_ops%.*}
                         r_ops=$(echo "$o - $w_ops" | bc)
-                        make ALLOCATOR_AREA_SIZE=$s WRITES=$w_ops READS=$r_ops CF=$cf CHUNK=$chunk
+                        make ALLOCATOR_AREA_SIZE=$s WRITES=$w_ops READS=$r_ops CF=$cf CHUNK=$chunk ALIGNED=$ALIGNED TEST_SIZE=$TEST_SIZE
                         ./application/prog
                     done
                 done
@@ -193,7 +217,9 @@ clean_all() {
     echo "Cleaned all CSV results and plots."
 }
 
-case "${1:-}" in
+parse_args "$@"
+
+case "$COMMAND" in
     "")
         check_bc
         run_experiments
@@ -210,12 +236,5 @@ case "${1:-}" in
         ;;
     clean)
         clean_all
-        ;;
-    -h|--help)
-        usage
-        ;;
-    *)
-        echo "Unknown command: $1"
-        usage
         ;;
 esac

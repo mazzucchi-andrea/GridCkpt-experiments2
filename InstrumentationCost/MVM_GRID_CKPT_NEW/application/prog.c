@@ -37,6 +37,14 @@
 #define CF 0
 #endif
 
+#ifndef ALIGNED
+#define ALIGNED 1
+#endif
+
+#ifndef TEST_SIZE
+#define TEST_SIZE 8
+#endif
+
 #define LIMIT_8BIT ALLOCATOR_AREA_SIZE - 1
 #define LIMIT_16BIT ALLOCATOR_AREA_SIZE - 2
 #define LIMIT_32BIT ALLOCATOR_AREA_SIZE - 4
@@ -50,30 +58,74 @@ double restore_area(uint8_t *area) {
     return (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1e-9;
 }
 
-double test_checkpoint(uint8_t* area, int8_t value_8bit, int16_t value_16bit,
-                       int32_t value_32bit, int64_t value_64bit) {
+double test_checkpoint(uint8_t* area, int8_t value_8bit, int64_t value_64bit) {
     int offset;
+    volatile uint8_t read_8bit_value;
     volatile uint64_t read_64bit_value;
     struct timespec start, end;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     _set_ckpt(area);
+#if ALIGNED == 1
     offset = 0;
+#else
+    offset = MOD / 2;
+#endif
     for (int i = 0; i < WRITES; i++) {
-        if (offset >= LIMIT_64BIT) {
+#if TEST_SIZE == 1
+        if (offset >= LIMIT_8BIT) {
+#if ALIGNED == 1
             offset = 0;
+#else
+            offset = MOD / 2;
+#endif
+        }
+        *(int8_t*)(area + offset) = value_8bit;
+        offset += MOD;
+#endif
+
+#if TEST_SIZE == 8
+        if (offset >= LIMIT_64BIT) {
+#if ALIGNED == 1
+            offset = 0;
+#else
+            offset = MOD / 2;
+#endif
         }
         *(int64_t*)(area + offset) = value_64bit;
         offset += MOD;
+#endif
     }
 
+#if ALIGNED == 1
     offset = 0;
+#else
+    offset = MOD / 2;
+#endif
     for (int i = 0; i < READS; i++) {
-        if (offset >= LIMIT_64BIT) {
+#if TEST_SIZE == 1
+        if (offset >= LIMIT_8BIT) {
+#if ALIGNED == 1
             offset = 0;
+#else
+            offset = MOD / 2;
+#endif
+        }
+        read_8bit_value = *(int8_t*)(area + offset);
+        offset += MOD;
+#endif
+
+#if TEST_SIZE == 8
+        if (offset >= LIMIT_64BIT) {
+#if ALIGNED == 1
+            offset = 0;
+#else
+            offset = MOD / 2;
+#endif
         }
         read_64bit_value = *(int64_t*)(area + offset);
         offset += MOD;
+#endif
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
 
@@ -81,7 +133,6 @@ double test_checkpoint(uint8_t* area, int8_t value_8bit, int16_t value_16bit,
 }
 
 double test_checkpoint_repeat(uint8_t* area, int8_t value_8bit,
-                              int16_t value_16bit, int32_t value_32bit,
                               int64_t value_64bit, int rep) {
     int offset;
     volatile uint8_t read_8bit_value;
@@ -93,22 +144,66 @@ double test_checkpoint_repeat(uint8_t* area, int8_t value_8bit,
     clock_gettime(CLOCK_MONOTONIC, &start);
     _set_ckpt(area);
     for (int r = 0; r < rep; r++) {
+#if ALIGNED == 1
         offset = 0;
+#else
+        offset = MOD / 2;
+#endif
         for (int i = 0; i < WRITES; i++) {
-            if (offset >= LIMIT_64BIT) {
+#if TEST_SIZE == 1
+            if (offset >= LIMIT_8BIT) {
+#if ALIGNED == 1
                 offset = 0;
+#else
+                offset = MOD / 2;
+#endif
+            }
+            *(int8_t*)(area + offset) = value_8bit;
+            offset += MOD;
+#endif
+
+#if TEST_SIZE == 8
+            if (offset >= LIMIT_64BIT) {
+#if ALIGNED == 1
+                offset = 0;
+#else
+                offset = MOD / 2;
+#endif
             }
             *(int64_t*)(area + offset) = value_64bit;
             offset += MOD;
+#endif
         }
 
+#if ALIGNED == 1
         offset = 0;
-        for (int i = 0; i < READS / 4; i++) {
-            if (offset >= LIMIT_64BIT) {
+#else
+        offset = MOD / 2;
+#endif
+        for (int i = 0; i < READS; i++) {
+#if TEST_SIZE == 1
+            if (offset >= LIMIT_8BIT) {
+#if ALIGNED == 1
                 offset = 0;
+#else
+                offset = MOD / 2;
+#endif
+            }
+            read_8bit_value = *(int8_t*)(area + offset);
+            offset += MOD;
+#endif
+
+#if TEST_SIZE == 8
+            if (offset >= LIMIT_64BIT) {
+#if ALIGNED == 1
+                offset = 0;
+#else
+                offset = MOD / 2;
+#endif
             }
             read_64bit_value = *(int64_t*)(area + offset);
             offset += MOD;
+#endif
         }
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -154,8 +249,6 @@ int main(void) {
     clock_t begin, end;
     uint8_t* area;
     uint8_t value_8bit;
-    uint16_t value_16bit;
-    uint32_t value_32bit;
     uint64_t value_64bit;
     size_t size;
     FILE* file;
@@ -164,8 +257,6 @@ int main(void) {
 
     srand(42);
     value_8bit = rand() % UINT8_MAX;
-    value_16bit = rand() % UINT16_MAX;
-    value_32bit = rand() % UINT32_MAX;
     value_64bit = rand() % UINT64_MAX;
 
     base_addr = 8UL * 1024UL * ALLOCATOR_AREA_SIZE;
@@ -181,8 +272,7 @@ int main(void) {
 #if CF == 1
         clean_cache(area);
 #endif
-        ckpt_samples[i] = test_checkpoint(area, value_8bit, value_16bit,
-                                          value_32bit, value_64bit);
+        ckpt_samples[i] = test_checkpoint(area, value_8bit, value_64bit);
 #if CF == 1
         clean_cache(area);
 #endif
@@ -212,8 +302,7 @@ int main(void) {
 #if CF == 1
         clean_cache(area);
 #endif
-        ckpt_samples[i] = test_checkpoint_repeat(area, value_8bit, value_16bit,
-                                                 value_32bit, value_64bit, 10);
+        ckpt_samples[i] = test_checkpoint_repeat(area, value_8bit, value_64bit, 10);
 #if CF == 1
         clean_cache(area);
 #endif

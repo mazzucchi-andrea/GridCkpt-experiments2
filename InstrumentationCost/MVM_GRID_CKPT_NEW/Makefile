@@ -54,14 +54,19 @@ ADDITIONAL_FLAGS = -O3 -DCKPT -DAPPLY_PATCHES #-DVERBOSE
 
 #CKPT FLAGS
 ALLOCATOR_AREA_SIZE=0x100000
-MOD=8
+WRITES=950
+READS=50
+MOD=32
+CF=0
+ALIGNED=1
+TEST_SIZE=1
 
 THE_VM = -DVM_NAME=\"MVM\"
 
 all: checks backup-files file-rewriting compile-and-link restore-files
 
 compile-and-link: movm
-	export C_INCLUDE_PATH=$(PWD)/include; cd $(APP) ; make ALLOCATOR_AREA_SIZE=$(ALLOCATOR_AREA_SIZE) WRITES=$(WRITES) READS=$(READS) MOD=$(MOD) CF=$(CF) ; $(CC) $(APP_OBJ) $(LIB)/movm.o -o $(EXECUTABLE) $(SECURITY_FLAGS) $(ADDITIONAL_FLAGS) $(LIBS) -Xlinker --wrap=main
+	export C_INCLUDE_PATH=$(PWD)/include; cd $(APP) ; make ALLOCATOR_AREA_SIZE=$(ALLOCATOR_AREA_SIZE) WRITES=$(WRITES) READS=$(READS) MOD=$(MOD) CF=$(CF) ALIGNED=$(ALIGNED) TEST_SIZE=$(TEST_SIZE); $(CC) $(APP_OBJ) $(LIB)/movm.o -o $(EXECUTABLE) $(SECURITY_FLAGS) $(ADDITIONAL_FLAGS) $(LIBS) -Xlinker --wrap=main
 	objdump -Dw $(EXECUTABLE) > $(DISASSEMBLY) 
 
 checks:

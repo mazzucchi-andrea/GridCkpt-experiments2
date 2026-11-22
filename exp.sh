@@ -21,7 +21,22 @@ run_kick() {
 run_instr_cost() {
   echo "Running instr_cost experiments..."
   cd InstrumentationCost
-  taskset -c 0 ./instr_cost_exp.sh
+  taskset -c 0 ./instr_cost_exp.sh experiments aligned 1
+  rm -rf instr_cost_aligned_1Byte
+  mkdir -p instr_cost_aligned_1Byte
+  cp -r plots/* instr_cost_aligned_1Byte/
+  taskset -c 0 ./instr_cost_exp.sh experiments aligned 8
+  rm -rf instr_cost_aligned_8Byte
+  mkdir -p instr_cost_aligned_8Byte
+  cp -r plots/* instr_cost_aligned_8Byte/
+  taskset -c 0 ./instr_cost_exp.sh experiments unaligned 1
+  rm -rf instr_cost_unaligned_1Byte
+  mkdir -p instr_cost_unaligned_1Byte
+  cp -r plots/* instr_cost_unaligned_1Byte/
+  taskset -c 0 ./instr_cost_exp.sh experiments unaligned 8
+  rm -rf instr_cost_unaligned_8Byte
+  mkdir -p instr_cost_unaligned_8Byte
+  cp -r plots/* instr_cost_unaligned_8Byte/
   #./figures.sh
   #cd ..
   #mkdir -p figures

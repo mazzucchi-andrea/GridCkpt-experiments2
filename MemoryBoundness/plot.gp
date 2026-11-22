@@ -68,7 +68,7 @@ do for [i=1:4] {
         if (c eq ':' || c eq '.' || c eq '/') { safe = safe[1:k-1] . '_' . safe[k+1:strlen(safe)] }
     }
 
-    set output sprintf('%s.png', safe)
+    set output sprintf('plots/%s.png', safe)
     set title vname noenhanced
     set xlabel 'Percentage of writes (%)'
     set ylabel vname noenhanced

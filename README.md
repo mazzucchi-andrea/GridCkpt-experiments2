@@ -106,8 +106,8 @@ The expected runtime of each experiment is detailed in the following table:
 
 | Experiment   | Runtime |
 |--------------|---------|
-| instr_cost   | ~3m     |
-| mem_bound    | ~21m    |
+| instr_cost   | ~5m     |
+| mem_bound    | ~25m    |
 | phold        | ~Xh XXm |
 | pcs          | ~Xh XXm |
 | **Total**    | **~XXh XXm** |

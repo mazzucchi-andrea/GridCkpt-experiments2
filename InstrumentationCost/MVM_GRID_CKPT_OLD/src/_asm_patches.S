@@ -71,7 +71,6 @@ the_patch_assembly:
 #define LOG2_EVAL(x) LOG2_##x
 #define LOG2(x) LOG2_EVAL(x)
 
-.p2align 6
 ckpt_assembly:
  #if ALLOCATOR_AREA_SIZE <= 0xFFFFFFFF
         mov %ebx, %eax

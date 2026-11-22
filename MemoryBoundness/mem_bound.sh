@@ -119,29 +119,7 @@ generate_figures() {
     rm -rf plots
     mkdir plots
 
-    gcc -O3 get_data.c -o get_plot_data
-
-    for chunk in ${chunks[@]}
-    do
-        for mod in ${mods[@]};
-        do
-            for s in ${size[@]};
-            do
-                for cf in ${cache_flush[@]};
-                do
-                    for o in ${ops[@]};
-                    do
-                        ./get_plot_data $s $cf $mod $chunk $o
-                        gnuplot plot.gp
-                    done
-                done
-            done
-        done
-    done
-
-    rm -f get_plot_data
-    rm -f ckpt_plot_data.csv
-    rm -f restore_plot_data.csv
+    gnuplot plot.gp
 }
 
 clean_all() {
@@ -159,14 +137,14 @@ case "${1:-}" in
     "")
         check_bc
         run_experiments
-        figures
+        generate_figures
         ;;
     experiments)
         check_bc
         run_experiments
         ;;
     figures)
-        gnuplot plot.gp
+        generate_figures
         ;;
     clean)
         clean_all
